@@ -1,10 +1,6 @@
 #include "snake.h"
 #include "player.h"
-
-typedef struct Tail {
-    u8 d, l;
-    struct Tail*next;
-} Tail;
+#include "tail.h"
 
 struct {
     u8 x, y, d, speed;		// d is direction, has values like BTN_UP
@@ -12,44 +8,47 @@ struct {
     Tail*tail;
 } _p;
 
-// Tail t3 = { BTN_LEFT, 9, NULL };
-// Tail t2 = { BTN_UP, 7, &t3 };
-// Tail t1 = { BTN_RIGHT, 5, &t2 };
-// Tail t0 = { BTN_DOWN, 3, &t1 };
-
 void player_init() {
     _p.x = SCREEN_TILES_H/2;
     _p.y = SCREEN_TILES_V/2;
     _p.d = BTN_UP;
     _p.nextd = 0;
-    _p.speed = 30;
-    _p.tail = NULL;
+    _p.speed = 15; 		// start at 30
+
+
+    _p.tail = tail_new(BTN_DOWN, 3,
+		       tail_new(BTN_RIGHT, 5,
+				tail_new(BTN_UP, 7,
+					 tail_new(BTN_LEFT, 9, NULL))));
+    // _p.tail = NULL;
 }
 
-void player_draw() {
+void player_draw() {    
     SetTile(_p.x, _p.y, TILE_SNAKE);
     Tail*tail = _p.tail;
 
-    u8 x0 = _p.x, y0 = _p.y;
-    
-    while (tail) {
-	u8 x1 = x0, y1 = y0;
+    inline bool draw_tail_square(u8 x, u8 y) {
+	SetTile(x, y, TILE_SNAKE);
+	return false;
+    }
+    tail_traverse(_p.tail, _p.x, _p.y, draw_tail_square);
+
+    // ==== debugging ====
+    tail = _p.tail;
+    for (u8 i = 0; tail; i++, tail=tail->next) {
+	PrintByte(2, i, i, false);
+	Print(3, i, PSTR(": "));
+
+	const u8 L1 = 5;
+
 	switch (tail->d) {
-	case BTN_UP:    y1 = y0-tail->l; break;
-	case BTN_DOWN:  y1 = y0+tail->l; break;
-	case BTN_LEFT:  x1 = x0-tail->l; break;
-	case BTN_RIGHT: x1 = x0+tail->l; break;
+	case BTN_UP:    Print(L1, i, PSTR("UP")); break;
+	case BTN_DOWN:  Print(L1, i, PSTR("DN")); break;
+	case BTN_LEFT:  Print(L1, i, PSTR("LT")); break;
+	case BTN_RIGHT: Print(L1, i, PSTR("RT")); break;
 	}
 
-	for (u8 i = MIN(x0, x1); i <= MAX(x0, x1); i++) {
-	    for (u8 j = MIN(y0, y1); j <= MAX(y0, y1); j++) {
-		SetTile(i, j, TILE_SNAKE);
-	    }
-	}
-
-	x0 = x1;
-	y0 = y1;
-	tail = tail->next;
+	PrintByte(L1+4, i, tail->l, false);
     }
 }
 
@@ -74,8 +73,7 @@ void player_turn(u8 direction) {
 	break;
     }
 
-    // TODO: deal with tails
-
+    // queue this turn for update
     _p.nextd = direction;
 }
 
@@ -90,6 +88,17 @@ bool player_update() {
     if (_p.nextd) {
 	_p.d = _p.nextd;
 	_p.nextd = 0;
+
+	// add new tail at head
+	u8 newd = 0;
+	switch (_p.d) {
+	case BTN_UP:    newd = BTN_DOWN;  break;
+	case BTN_DOWN:  newd = BTN_UP;    break;
+	case BTN_LEFT:  newd = BTN_RIGHT; break;
+	case BTN_RIGHT: newd = BTN_LEFT;  break;
+	}
+	Tail*newt = tail_new(newd, 0, _p.tail);
+	_p.tail = newt;
     }
     
     switch (_p.d) {
@@ -99,12 +108,47 @@ bool player_update() {
     case BTN_RIGHT: _p.x++; break;
     }
 
-    // TODO: update tails (update lengths of most recent and last ones, potentially remove last one)
+    // ---------------------------------------- update tails
+    // (update lengths of most recent and last ones, potentially remove last one)
+    {
+	Tail*head = _p.tail;
+	Tail*last = tail_last(head);
 
-    // TODO: check if collided with own tail
+	if (head) {
+	    // adjust lengths
+	    head->l++;
+	    last->l--;
 
-    if (_p.x == 0 || _p.x == SCREEN_TILES_H-1 ||
-	_p.y == 2 || _p.y == SCREEN_TILES_V-1)
+	    // remove last tail if it's 0-length
+	    if (!last->l) {
+		Tail*curr = _p.tail;
+		Tail*prev = curr;
+		while (curr->next) {
+		    prev = curr;
+		    curr = curr->next;
+		}
+		tail_destroy_link(&prev->next);
+	    }
+	}
+    }
+
+    // ---------------------------------------- check if collided with own tail
+    {
+	static u8 count = 0;
+	count = 0;
+	inline bool collision_counter(u8 x, u8 y) {
+	    if (x == _p.x && y == _p.y)
+		count++;
+	    return false;    
+	}
+
+	tail_traverse(_p.tail, _p.x, _p.y, collision_counter);
+	if (count > 1)
+	    return true;
+    }
+
+    // ---------------------------------------- check if collided with walls
+    if (out_of_bounds(_p.x, _p.y))
 	return true;
 
     return false;

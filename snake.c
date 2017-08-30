@@ -37,6 +37,13 @@ void draw_walls() {
     }    
 }
 
+bool out_of_bounds(u8 x, u8 y) {
+    if (x <= 0 || x >= SCREEN_TILES_H-1 ||
+	y <= 2 || y >= SCREEN_TILES_V-1)
+	return true;
+    return false;
+}
+
 void die() {
     player_destroy();
     _state = STATE_DIED;
@@ -55,6 +62,7 @@ int main() {
     	WaitVsync(1);
     	button_update();
 
+#if 1
     	switch (_state) {
     	case STATE_PLAYING: {
 	    if      (_btn.prsd & BTN_UP)    player_turn(BTN_UP);
@@ -79,5 +87,6 @@ int main() {
 	    }
     	} break;
     	}
+#endif
     }
 }

@@ -15,4 +15,6 @@
 #define MAX(a,b) ((a)>(b) ? (a) : (b))
 #define MIN(a,b) ((a)>(b) ? (b) : (a))
 
+bool out_of_bounds(u8 x, u8 y);
+
 #endif
