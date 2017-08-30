@@ -57,6 +57,11 @@ int main() {
 
     	switch (_state) {
     	case STATE_PLAYING: {
+	    if      (_btn.prsd & BTN_UP)    player_turn(BTN_UP);
+	    else if (_btn.prsd & BTN_DOWN)  player_turn(BTN_DOWN);
+	    else if (_btn.prsd & BTN_LEFT)  player_turn(BTN_LEFT);
+	    else if (_btn.prsd & BTN_RIGHT) player_turn(BTN_RIGHT);
+	    
     	    if (player_update()) {
     		die();
 		break;

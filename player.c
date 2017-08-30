@@ -8,6 +8,7 @@ typedef struct Tail {
 
 struct {
     u8 x, y, d, speed;		// d is direction, has values like BTN_UP
+    u8 nextd;
     Tail*tail;
 } _p;
 
@@ -20,6 +21,7 @@ void player_init() {
     _p.x = SCREEN_TILES_H/2;
     _p.y = SCREEN_TILES_V/2;
     _p.d = BTN_UP;
+    _p.nextd = 0;
     _p.speed = 30;
     _p.tail = NULL;
 }
@@ -52,7 +54,29 @@ void player_draw() {
 }
 
 void player_turn(u8 direction) {
-    
+    // ignore meaningless turns
+    switch (direction) {
+    case BTN_UP:
+    case BTN_DOWN:
+	switch (_p.d) {
+	case BTN_UP:
+	case BTN_DOWN:
+	    return;
+	}
+	break;
+    case BTN_LEFT:
+    case BTN_RIGHT:
+	switch (_p.d) {
+	case BTN_LEFT:
+	case BTN_RIGHT:
+	    return;
+	}
+	break;
+    }
+
+    // TODO: deal with tails
+
+    _p.nextd = direction;
 }
 
 // returns if we've died this update
@@ -60,13 +84,19 @@ bool player_update() {
     static u8 counter = 0;
     counter = (counter+1)%60;
 
-    if (counter % _p.speed == 0) {
-	switch (_p.d) {
-	case BTN_UP:    _p.y--; break;
-	case BTN_DOWN:  _p.y++; break;
-	case BTN_LEFT:  _p.x--; break;
-	case BTN_RIGHT: _p.x++; break;
-	}
+    if (counter % _p.speed != 0)
+	return false;
+
+    if (_p.nextd) {
+	_p.d = _p.nextd;
+	_p.nextd = 0;
+    }
+    
+    switch (_p.d) {
+    case BTN_UP:    _p.y--; break;
+    case BTN_DOWN:  _p.y++; break;
+    case BTN_LEFT:  _p.x--; break;
+    case BTN_RIGHT: _p.x++; break;
     }
 
     // TODO: update tails (update lengths of most recent and last ones, potentially remove last one)
