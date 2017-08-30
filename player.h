@@ -11,4 +11,6 @@ void player_destroy();
 // early. TAIL_TRAVERSE returns true if FUNC broke early.
 bool player_tail_traverse(bool (*func)(u8 x, u8 y));
 
+uint16_t player_get_score();
+
 #endif

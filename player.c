@@ -3,10 +3,13 @@
 #include "tail.h"
 #include "apple.h"
 
+#define DEBUG_TAIL 0 		// set to 1 to print tail debugging info on screen
+
 typedef struct {
     u8 x, y, d, speed;		// d is direction, has values like BTN_UP
     u8 nextd;
     Tail*tail;
+    uint16_t score;
 } Player;
 Player _p;
 
@@ -57,6 +60,7 @@ void player_init() {
     _p.y = SCREEN_TILES_V/2;
     _p.d = BTN_UP;
     _p.nextd = 0;
+    _p.score = 0;
     _p.speed = 5; 		// start at 30
 
 
@@ -77,6 +81,7 @@ void player_draw() {
     }
     player_tail_traverse(draw_tail_square);
 
+#if DEBUG_TAIL
     // ==== debugging ====
     tail = _p.tail;
     for (u8 i = 0; tail; i++, tail=tail->next) {
@@ -94,6 +99,7 @@ void player_draw() {
 
 	PrintByte(L1+4, i, tail->l, false);
     }
+#endif
 }
 
 void player_turn(u8 direction) {
@@ -201,7 +207,8 @@ bool player_update() {
 
     // ========== eat any apple that exists
     if (apple_get_x() == _p.x && apple_get_y() == _p.y) {
-	// TODO: deal with scores
+	// TODO: speed up
+	_p.score++;
 	apple_create();
 	should_extend_tail = true;
     } else {
@@ -214,3 +221,5 @@ bool player_update() {
 void player_destroy() {
     
 }
+
+inline uint16_t player_get_score() { return _p.score; }

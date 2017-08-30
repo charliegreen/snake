@@ -82,6 +82,9 @@ int main() {
     	    draw_walls();
     	    player_draw();
 	    apple_draw();
+
+	    Print(SCREEN_TILES_H-6-7, 1, PSTR("SCORE: "));
+	    PrintInt(SCREEN_TILES_H-2, 1, player_get_score(), false);
     	} break;
 
     	case STATE_DIED: {
