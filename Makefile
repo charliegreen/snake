@@ -14,7 +14,7 @@ AUX_TARGETS := $(GAME).hex # $(GAME).uze $(GAME).lss $(GAME).eep
 AUX_DEPS := Makefile $(wildcard $(DATA_DIR)/*)
 
 KERNEL_OPTS  := -DVIDEO_MODE=1 -DINTRO_LOGO=0 -DSOUND_MIXER=0 -DMODE1_FAST_VSYNC=0
-KERNEL_OPTS  += -DTILE_WIDTH=8 -DTILE_HEIGHT=8
+KERNEL_OPTS  += -DTILE_WIDTH=8 -DTILE_HEIGHT=8 -DTRUE_RANDOM_GEN=1
 AUX_LD_FLAGS := # -Wl,--section-start,.noinit=0x800100 -Wl,--section-start,.data=0x800500
 
 FILES_C := $(shell find . -type f -iname '*.c')

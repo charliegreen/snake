@@ -1,8 +1,19 @@
 #include "snake.h"
 #include "player.h"
 #include "tail.h"
+#include "apple.h"
 
 Player _p;
+
+static inline u8 opposite_d(u8 d) {
+    switch (d) {
+    case BTN_UP:    return BTN_DOWN;  break;
+    case BTN_DOWN:  return BTN_UP;    break;
+    case BTN_LEFT:  return BTN_RIGHT; break;
+    case BTN_RIGHT: return BTN_LEFT;  break;
+    }
+    return 0;
+}
 
 bool player_tail_traverse(bool (*func)(u8 x, u8 y)) {
     Tail*tail = _p.tail;
@@ -41,14 +52,14 @@ void player_init() {
     _p.y = SCREEN_TILES_V/2;
     _p.d = BTN_UP;
     _p.nextd = 0;
-    _p.speed = 15; 		// start at 30
+    _p.speed = 5; 		// start at 30
 
 
-    _p.tail = tail_new(BTN_DOWN, 3,
-		       tail_new(BTN_RIGHT, 5,
-				tail_new(BTN_UP, 7,
-					 tail_new(BTN_LEFT, 9, NULL))));
-    // _p.tail = NULL;
+    // _p.tail = tail_new(BTN_DOWN, 3,
+    // 		       tail_new(BTN_RIGHT, 5,
+    // 				tail_new(BTN_UP, 7,
+    // 					 tail_new(BTN_LEFT, 9, NULL))));
+    _p.tail = NULL;
 }
 
 void player_draw() {    
@@ -107,36 +118,36 @@ void player_turn(u8 direction) {
 
 // returns if we've died this update
 bool player_update() {
+    static bool should_extend_tail = false;
+    
+    // ========== deal with update speed
     static u8 counter = 0;
     counter = (counter+1)%60;
 
     if (counter % _p.speed != 0)
 	return false;
 
+    // ========== perform a turn if one is queued
     if (_p.nextd) {
 	_p.d = _p.nextd;
 	_p.nextd = 0;
 
 	// add new tail at head
-	u8 newd = 0;
-	switch (_p.d) {
-	case BTN_UP:    newd = BTN_DOWN;  break;
-	case BTN_DOWN:  newd = BTN_UP;    break;
-	case BTN_LEFT:  newd = BTN_RIGHT; break;
-	case BTN_RIGHT: newd = BTN_LEFT;  break;
+	if (_p.tail) {		// no need to add a new tail segment if there is no tail
+	    Tail*newt = tail_new(opposite_d(_p.d), 0, _p.tail);
+	    _p.tail = newt;
 	}
-	Tail*newt = tail_new(newd, 0, _p.tail);
-	_p.tail = newt;
     }
-    
+
+    // ========== actually move
     switch (_p.d) {
     case BTN_UP:    _p.y--; break;
     case BTN_DOWN:  _p.y++; break;
     case BTN_LEFT:  _p.x--; break;
     case BTN_RIGHT: _p.x++; break;
     }
-
-    // ---------------------------------------- update tails
+    
+    // ========== update tails
     // (update lengths of most recent and last ones, potentially remove last one)
     {
 	Tail*head = _p.tail;
@@ -145,7 +156,8 @@ bool player_update() {
 	if (head) {
 	    // adjust lengths
 	    head->l++;
-	    last->l--;
+	    if (!should_extend_tail && last->l)
+		last->l--;
 
 	    // remove last tail if it's 0-length
 	    if (!last->l) {
@@ -157,10 +169,13 @@ bool player_update() {
 		}
 		tail_destroy_link(&prev->next);
 	    }
+	} else if (should_extend_tail) {
+	    // there's no tail, but we need to extend it, so create new tail
+	    _p.tail = tail_new(opposite_d(_p.d), 1, NULL);
 	}
     }
 
-    // ---------------------------------------- check if collided with own tail
+    // ========== check if collided with own tail
     {
 	static u8 count = 0;
 	count = 0;
@@ -175,10 +190,19 @@ bool player_update() {
 	    return true;
     }
 
-    // ---------------------------------------- check if collided with walls
+    // ========== check if collided with walls
     if (out_of_bounds(_p.x, _p.y))
 	return true;
 
+    // ========== eat any apple that exists
+    if (apple_get_x() == _p.x && apple_get_y() == _p.y) {
+	// TODO: deal with scores
+	apple_create();
+	should_extend_tail = true;
+    } else {
+	should_extend_tail = false;
+    }
+    
     return false;
 }
 

@@ -1,5 +1,6 @@
 #include "snake.h"
 #include "player.h"
+#include "apple.h"
 
 #include "gen/tiles.inc"
 #include "data/font-8x8-full.inc"
@@ -52,11 +53,13 @@ void die() {
 }
 
 int main() {
+    GetPrngNumber(GetTrueRandomSeed());
     SetFontTable(font);
     SetTileTable(TILETAB_TILES);
     ClearVram();
     
     player_init();
+    apple_create();
 
     while (true) {
     	WaitVsync(1);
@@ -78,6 +81,7 @@ int main() {
     	    ClearVram();
     	    draw_walls();
     	    player_draw();
+	    apple_draw();
     	} break;
 
     	case STATE_DIED: {
