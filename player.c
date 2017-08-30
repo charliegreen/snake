@@ -2,11 +2,39 @@
 #include "player.h"
 #include "tail.h"
 
-struct {
-    u8 x, y, d, speed;		// d is direction, has values like BTN_UP
-    u8 nextd;
-    Tail*tail;
-} _p;
+Player _p;
+
+bool player_tail_traverse(bool (*func)(u8 x, u8 y)) {
+    Tail*tail = _p.tail;
+    if (!tail)
+	return false;
+
+    u8 x0 = _p.x, y0 = _p.y;
+    while (tail) {
+	u8 x1 = x0, y1 = y0;
+	switch (tail->d) {
+	case BTN_UP:    y1 = y0-tail->l; break;
+	case BTN_DOWN:  y1 = y0+tail->l; break;
+	case BTN_LEFT:  x1 = x0-tail->l; break;
+	case BTN_RIGHT: x1 = x0+tail->l; break;
+	}
+
+	for (u8 i = MIN(x0, x1); i <= MAX(x0, x1); i++) {
+	    for (u8 j = MIN(y0, y1); j <= MAX(y0, y1); j++) {
+		if (out_of_bounds(i, j))
+		    goto exit;
+		if (func(i, j))
+		    return true;
+	    }
+	}
+
+	x0 = x1;
+	y0 = y1;
+	tail = tail->next;
+    }
+ exit:
+    return false;    
+}
 
 void player_init() {
     _p.x = SCREEN_TILES_H/2;
@@ -31,7 +59,7 @@ void player_draw() {
 	SetTile(x, y, TILE_SNAKE);
 	return false;
     }
-    tail_traverse(_p.tail, _p.x, _p.y, draw_tail_square);
+    player_tail_traverse(draw_tail_square);
 
     // ==== debugging ====
     tail = _p.tail;
@@ -142,7 +170,7 @@ bool player_update() {
 	    return false;    
 	}
 
-	tail_traverse(_p.tail, _p.x, _p.y, collision_counter);
+	player_tail_traverse(collision_counter);
 	if (count > 1)
 	    return true;
     }
