@@ -1,14 +1,6 @@
 #ifndef PLAYER_H
 #define PLAYER_H
 
-#include "tail.h"
-
-typedef struct {
-    u8 x, y, d, speed;		// d is direction, has values like BTN_UP
-    u8 nextd;
-    Tail*tail;
-} Player;
-
 void player_init();
 void player_draw();
 void player_turn(u8 direction);

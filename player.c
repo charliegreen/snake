@@ -3,6 +3,11 @@
 #include "tail.h"
 #include "apple.h"
 
+typedef struct {
+    u8 x, y, d, speed;		// d is direction, has values like BTN_UP
+    u8 nextd;
+    Tail*tail;
+} Player;
 Player _p;
 
 static inline u8 opposite_d(u8 d) {
