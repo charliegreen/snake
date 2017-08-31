@@ -64,6 +64,8 @@ int main() {
 	}
 	return false;
     }
+
+    load_scores();
     
     while (true) {
     	WaitVsync(1);
@@ -108,6 +110,11 @@ int main() {
 
     	case STATE_DIED: {
 	    if (state_first_updatep()) {
+		if (score_highp(player_get_score())) {
+		    switch_state(STATE_ENTER_NAME);
+		    break;
+		}
+		
 		player_destroy();
 		Print(SCREEN_TILES_H/2-5, SCREEN_TILES_V/2-3, PSTR("GAME OVER"));
 		// Print(SCREEN_TILES_H/2-6, SCREEN_TILES_V/2,   PSTR("PRESS START"));
@@ -128,7 +135,8 @@ int main() {
 	    if (state_first_updatep()) {
 		ClearVram();
 		draw_walls();
-		Print(SCREEN_TILES_H/2-3, 8, PSTR("SNAKE!"));
+		Print(SCREEN_TILES_H/2-3, 7, PSTR("SNAKE!"));
+		Print(SCREEN_TILES_H/2-6, 9, PSTR("by bytesquid"));
 
 		Print(L, U+0, PSTR("START GAME"));
 		Print(L, U+2, PSTR("VIEW HIGH SCORES"));
@@ -162,7 +170,45 @@ int main() {
 	} break;
 
 	case STATE_ENTER_NAME: {
-	    // TODO
+	    static const u8 L = SCREEN_TILES_H/2-8, U = 13;
+
+	    if (state_first_updatep()) {
+		ClearVram();
+		draw_walls();
+
+		Print(SCREEN_TILES_H/2-5, 7, PSTR("HIGH SCORE!"));
+		Print(SCREEN_TILES_H/2-8, 10, PSTR("Enter your name:"));
+
+		// Print(SCREEN_TILES_H/2-8, SCREEN_TILES_V-7, PSTR("X = clear letter"));
+		Print(SCREEN_TILES_H/2-10, SCREEN_TILES_V-7, PSTR("Press START when done"));
+
+		PrintInt(SCREEN_TILES_H-8, U, player_get_score(), false);
+	    }
+
+	    static unsigned char name[8] = "AAAAAAA\0";
+	    static u8 letter = 0;
+
+	    if (_btn.prsd & BTN_UP)    name[letter]--;
+	    if (_btn.prsd & BTN_DOWN)  name[letter]++;
+	    if (name[letter] < ' ')
+		name[letter] = '~';
+	    if (name[letter] > '~')
+		name[letter] = ' ';
+
+	    if (_btn.prsd & BTN_LEFT)  letter = (7+letter-1)%7;
+	    if (_btn.prsd & BTN_RIGHT) letter = (7+letter+1)%7;
+
+	    // FontFill(L, U-1, 8, 1, ' ');
+	    FontFill(L, U+1, 8, 1, ' ');
+	    PrintRam(L, U, name);
+	    // PrintChar(L+letter, U-1, '^');
+	    PrintChar(L+letter, U+1, '^');
+
+	    if (_btn.prsd & BTN_START) {
+		score_add(name, player_get_score());
+		save_scores();
+		switch_state(STATE_SCORES);
+	    }
 	} break;
     	}
 #endif

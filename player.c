@@ -63,7 +63,6 @@ void player_init() {
     _p.score = 0;
     _p.speed = 5; 		// start at 30
 
-
     // _p.tail = tail_new(BTN_DOWN, 3,
     // 		       tail_new(BTN_RIGHT, 5,
     // 				tail_new(BTN_UP, 7,
