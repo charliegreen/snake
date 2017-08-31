@@ -3,6 +3,9 @@
 #include "tail.h"
 #include "apple.h"
 
+#define SPEED_START 3		// the starting speed
+// #define SPEED_INC 1		// how many points it takes to speed up one more step
+
 #define DEBUG_TAIL 0 		// set to 1 to print tail debugging info on screen
 
 typedef struct {
@@ -61,7 +64,7 @@ void player_init() {
     _p.d = BTN_UP;
     _p.nextd = 0;
     _p.score = 0;
-    _p.speed = 5; 		// start at 30
+    _p.speed = SPEED_START;
 
     _p.tail = NULL;
 }
@@ -127,10 +130,11 @@ bool player_update() {
     
     // ========== deal with update speed
     static u8 counter = 0;
-    counter = (counter+1)%60;
+    // counter = (counter+1)%60;
+    counter = (counter+1)%_p.speed;
 
     if (counter % _p.speed != 0)
-	return false;
+    	return false;
 
     // ========== perform a turn if one is queued
     if (_p.nextd) {
@@ -201,8 +205,14 @@ bool player_update() {
 
     // ========== eat any apple that exists
     if (apple_get_x() == _p.x && apple_get_y() == _p.y) {
-	// TODO: speed up
 	_p.score++;
+
+	// TODO: modify speed based on score?
+	// if (_p.score >= SPEED_INC*(SPEED_START-2))
+	//     _p.speed = 3;
+	// else
+	//     _p.speed = SPEED_START - _p.score/SPEED_INC;
+	
 	apple_create();
 	should_extend_tail = true;
     } else {
