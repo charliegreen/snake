@@ -73,7 +73,6 @@ void player_init() {
 
 void player_draw() {    
     SetTile(_p.x, _p.y, TILE_SNAKE);
-    Tail*tail = _p.tail;
 
     inline bool draw_tail_square(u8 x, u8 y) {
 	SetTile(x, y, TILE_SNAKE);
@@ -83,7 +82,7 @@ void player_draw() {
 
 #if DEBUG_TAIL
     // ==== debugging ====
-    tail = _p.tail;
+    Tail*tail = _p.tail;
     for (u8 i = 0; tail; i++, tail=tail->next) {
 	PrintByte(2, i, i, false);
 	Print(3, i, PSTR(": "));

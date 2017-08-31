@@ -1,6 +1,7 @@
 #include "snake.h"
 #include "player.h"
 #include "apple.h"
+#include "score.h"
 
 #include "gen/tiles.inc"
 #include "data/font-8x8-full.inc"
@@ -57,15 +58,19 @@ int main() {
     SetFontTable(font);
     SetTileTable(TILETAB_TILES);
     ClearVram();
-    
+
     player_init();
     apple_create();
 
+    load_scores();
+    
     while (true) {
     	WaitVsync(1);
     	button_update();
 
-#if 1
+	draw_scores();
+	
+#if 0
     	switch (_state) {
     	case STATE_PLAYING: {
 	    if      (_btn.prsd & BTN_UP)    player_turn(BTN_UP);
