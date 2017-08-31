@@ -116,11 +116,11 @@ int main() {
 		
 		player_destroy();
 		Print(SCREEN_TILES_H/2-5, SCREEN_TILES_V/2-3, PSTR("GAME OVER"));
-		Print(SCREEN_TILES_H/2-10, SCREEN_TILES_V/2+2, PSTR("PRESS A TO CONTINUE"));
+		Print(SCREEN_TILES_H/2-10, SCREEN_TILES_V/2+2, PSTR("PRESS B TO CONTINUE"));
 		Print(SCREEN_TILES_H/2-10, SCREEN_TILES_V/2+4, PSTR("PRESS START FOR MENU"));
 	    }
 	    
-	    if (_btn.prsd & BTN_A)
+	    if (_btn.prsd & BTN_B)
 		switch_state(STATE_PLAYING);
 	    
 	    if (_btn.prsd & BTN_START)
@@ -149,7 +149,7 @@ int main() {
 	    if (_btn.prsd & BTN_UP || _btn.prsd & BTN_LEFT)
 		selection = (2+selection-1)%2;
 
-	    if (_btn.prsd & BTN_A || _btn.prsd & BTN_START)
+	    if (_btn.prsd & BTN_B || _btn.prsd & BTN_START)
 		switch_state(selection == 0 ? STATE_PLAYING : STATE_SCORES);
 	    
 	} break;
@@ -162,7 +162,7 @@ int main() {
 		draw_scores();
 	    }
 
-	    if (_btn.prsd & BTN_START || _btn.prsd & BTN_A)
+	    if (_btn.prsd & BTN_START || _btn.prsd & BTN_B)
 		switch_state(STATE_MENU);
 	} break;
 
@@ -187,10 +187,12 @@ int main() {
 
 	    if (_btn.prsd & BTN_UP)    name[letter]--;
 	    if (_btn.prsd & BTN_DOWN)  name[letter]++;
+	    if (_btn.prsd & BTN_SL)    name[letter]-=5;
+	    if (_btn.prsd & BTN_SR)    name[letter]+=5;
 	    if (name[letter] < ' ')
-		name[letter] = '~';
+		name[letter] += '~'-' ';
 	    if (name[letter] > '~')
-		name[letter] = ' ';
+		name[letter] -= '~'-' '+1; //+= ' '-'~';
 
 	    if (_btn.prsd & BTN_LEFT)  letter = (7+letter-1)%7;
 	    if (_btn.prsd & BTN_RIGHT) letter = (7+letter+1)%7;
@@ -199,7 +201,7 @@ int main() {
 	    PrintRam(L, U, name);
 	    PrintChar(L+letter, U+1, '^');
 
-	    if (_btn.prsd & BTN_START) { // || _btn.prsd & BTN_A) {
+	    if (_btn.prsd & BTN_START) { // || _btn.prsd & BTN_B) {
 		score_add(name, player_get_score());
 		save_scores();
 		player_destroy();

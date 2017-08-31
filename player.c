@@ -3,7 +3,7 @@
 #include "tail.h"
 #include "apple.h"
 
-#define SPEED_START 3		// the starting speed
+#define SPEED_START 5		// the starting speed
 // #define SPEED_INC 1		// how many points it takes to speed up one more step
 
 #define DEBUG_TAIL 0 		// set to 1 to print tail debugging info on screen
