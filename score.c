@@ -87,6 +87,8 @@ void draw_scores() {
     	PrintRam(L, U+2*i, _table->entries[i].name);
     	PrintInt(R, U+2*i, _table->entries[i].score, false);
     }
+
+    Print(SCREEN_TILES_H/2-6, SCREEN_TILES_V-8, PSTR("PRESS START"));
 }
 
 bool score_highp(uint16_t score) { return score > _table->entries[0].score; }

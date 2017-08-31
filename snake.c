@@ -9,7 +9,7 @@
 typedef enum {
     STATE_PLAYING, STATE_DIED, STATE_MENU, STATE_SCORES, STATE_ENTER_NAME
 } GameState;
-GameState _state = STATE_PLAYING;
+GameState _state = STATE_MENU;
 
 typedef struct {
     u16 prev;			// Previous buttons that were held
@@ -52,9 +52,6 @@ int main() {
     SetTileTable(TILETAB_TILES);
     ClearVram();
 
-    player_init();
-    apple_create();
-
     static bool _state_first_update = true;
     inline void switch_state(u8 state) {
 	_state = state;
@@ -75,11 +72,26 @@ int main() {
 #if 1
     	switch (_state) {
     	case STATE_PLAYING: {
+	    if (state_first_updatep()) {
+		player_init();
+		apple_create();
+	    }
+	    
+	    static bool paused = false;
+	    if (_btn.prsd & BTN_START) {
+		if (!paused) {
+		    Print(SCREEN_TILES_H/2-3, SCREEN_TILES_V/2-1, PSTR("PAUSED"));
+		}
+		paused = !paused;
+	    }
+	    if (paused)
+		continue;
+	    
 	    if      (_btn.prsd & BTN_UP)    player_turn(BTN_UP);
 	    else if (_btn.prsd & BTN_DOWN)  player_turn(BTN_DOWN);
 	    else if (_btn.prsd & BTN_LEFT)  player_turn(BTN_LEFT);
 	    else if (_btn.prsd & BTN_RIGHT) player_turn(BTN_RIGHT);
-	    
+
     	    if (player_update()) {
     		switch_state(STATE_DIED);
 		break;
@@ -98,23 +110,55 @@ int main() {
 	    if (state_first_updatep()) {
 		player_destroy();
 		Print(SCREEN_TILES_H/2-5, SCREEN_TILES_V/2-3, PSTR("GAME OVER"));
-		Print(SCREEN_TILES_H/2-6, SCREEN_TILES_V/2,   PSTR("PRESS START"));
+		// Print(SCREEN_TILES_H/2-6, SCREEN_TILES_V/2,   PSTR("PRESS START"));
+
+		Print(SCREEN_TILES_H/2-10, SCREEN_TILES_V/2+2, PSTR("PRESS A TO CONTINUE"));
+		Print(SCREEN_TILES_H/2-10, SCREEN_TILES_V/2+4, PSTR("PRESS START FOR MENU"));
 	    }
-	    if (_btn.prsd & BTN_START) {
-		player_init();
-		_state = STATE_PLAYING;
-	    }
+	    
+	    if (_btn.prsd & BTN_A)
+		switch_state(STATE_PLAYING);
+	    
+	    if (_btn.prsd & BTN_START)
+		switch_state(STATE_MENU);
     	} break;
 
 	case STATE_MENU: {
-	    // TODO: main menu
+	    const static u8 L = 8, U = 14;
+	    if (state_first_updatep()) {
+		ClearVram();
+		draw_walls();
+		Print(SCREEN_TILES_H/2-3, 8, PSTR("SNAKE!"));
+
+		Print(L, U+0, PSTR("START GAME"));
+		Print(L, U+2, PSTR("VIEW HIGH SCORES"));
+	    }
+
+	    static u8 selection = 0;
+
+	    FontFill(L-2, U, 1, 6, ' ');
+	    PrintChar(L-2, U+2*selection, '>');
+
+	    if (_btn.prsd & BTN_DOWN || _btn.prsd & BTN_RIGHT)
+		selection = (selection+1)%2;
+	    if (_btn.prsd & BTN_UP || _btn.prsd & BTN_LEFT)
+		selection = (2+selection-1)%2;
+
+	    if (_btn.prsd & BTN_A || _btn.prsd & BTN_START)
+		switch_state(selection == 0 ? STATE_PLAYING : STATE_SCORES);
+	    
 	} break;
 
 	case STATE_SCORES: {
 	    if (state_first_updatep()) {
+		ClearVram();
+		draw_walls();
 		load_scores();
 		draw_scores();
 	    }
+
+	    if (_btn.prsd & BTN_START || _btn.prsd & BTN_A)
+		switch_state(STATE_MENU);
 	} break;
 
 	case STATE_ENTER_NAME: {
