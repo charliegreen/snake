@@ -63,10 +63,6 @@ void player_init() {
     _p.score = 0;
     _p.speed = 5; 		// start at 30
 
-    // _p.tail = tail_new(BTN_DOWN, 3,
-    // 		       tail_new(BTN_RIGHT, 5,
-    // 				tail_new(BTN_UP, 7,
-    // 					 tail_new(BTN_LEFT, 9, NULL))));
     _p.tail = NULL;
 }
 
@@ -217,7 +213,13 @@ bool player_update() {
 }
 
 void player_destroy() {
-    
+    inline void tail_destroy(Tail**t) {
+	if ((*t)->next)
+	    tail_destroy(&((*t)->next));
+	tail_destroy_link(t);
+    }
+
+    tail_destroy(&_p.tail);
 }
 
 inline uint16_t player_get_score() { return _p.score; }

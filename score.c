@@ -10,7 +10,7 @@
 #define TABLE_NAME_LEN 8
 
 typedef struct {
-    unsigned char name[TABLE_NAME_LEN];	// remember to null-terminate when printing!
+    unsigned char name[TABLE_NAME_LEN];
     uint16_t score;
 } ScoreTableEntry;
 
@@ -56,11 +56,9 @@ void load_scores() {
     if (EepromReadBlock(EEPROM_BLOCK_ID, &block)) {
 	// if block doesn't exist, create it
 	score_initialize();
-	// EepromReadBlock(EEPROM_BLOCK_ID, &block);
     }
     
     mcopy((u8*)_table, (u8*)block.data, DATA_SIZE);    
-    // hexdump(2, 2, (u8*)&block.data);
 }
 
 void save_scores() {
@@ -73,7 +71,7 @@ void save_scores() {
     if (r) {
 	Print(9, 1, PSTR("ERR:"));
     	PrintByte(16, 1, r, false);
-	while (true);
+	while (true);		// so error stays on screen and user sees it
     } else {
 	Print(9, 1, PSTR("Saved!"));
     }
@@ -81,10 +79,8 @@ void save_scores() {
 
 // draw highscore table
 void draw_scores() {
-    // ClearVram();
-
     if (!_table) {
-	Print(0, 0, PSTR("Err: scores not loaded"));
+	Print(1, 1, PSTR("Err: scores not loaded"));
 	return;
     }
 
@@ -106,85 +102,19 @@ void score_add(unsigned char*name, uint16_t score) {
     for (u8 i = TABLE_ENTRIES; i>0; i--)
 	if (_table->entries[i-1].score < score)
 	    idx = i-1;
-
-    // PrintByte(3, 0, idx, false);
     
     // return if we have no place
     if (idx == TABLE_ENTRIES)
 	return;
 
-    // u8 line = 1;
-    
     // move lower scores down
     for (u8 i = TABLE_ENTRIES-1; i>0 && i>idx; i--) {
-	// PrintByte(3, line++, i-1, false);
 	mcopy((u8*)&_table->entries[i], (u8*)&_table->entries[i-1], TABLE_NAME_LEN+2);
     }
 
+    // copy over this score
     mcopy((u8*)_table->entries[idx].name, (u8*)name, 8);
     _table->entries[idx].score = score;
-
-    // ClearVram();
-    // draw_scores();
-    // while (true);
 }
 
 bool score_highp(uint16_t score) { return score > _table->entries[TABLE_ENTRIES-1].score; }
-
-// ================================================================================
-// ================================================================================
-#if 0
-// #include <sdBase.h>
-#include <petitfatfs/pff.h>
-
-#define TABLE_ENTRIES 8
-#define TABLE_NAME_LEN 8
-
-// ID for "Direct Access" method for _HISCORE.DAT; See:
-// http://uzebox.org/wiki/SD_Save_Sector_Reservation_List
-#define SD_BLOCK_ID 18
-
-typedef struct {
-    char name[TABLE_NAME_LEN];	// remember to null-terminate when printing!
-    uint16_t score;
-} ScoreTableEntry;
-
-typedef struct {
-    ScoreTableEntry entries[TABLE_ENTRIES];
-} ScoreTable;
-
-ScoreTable*_table = NULL;
-
-void load_scores() {
-    _table = malloc(sizeof(ScoreTable));
-
-    for (uint8_t i=0; i<sizeof(ScoreTable); i++)
-    	*((uint8_t*)(_table)+i) = 0;
-
-    FATFS fs;
-    FRESULT res = pf_mount(&fs);
-    PrintByte(3, 0, res, false);
-    
-    res = pf_open(PSTR("_HISCORE.DAT"));
-    PrintByte(3, 1, res, false);
-
-    WORD read = 0;
-    res = pf_read(_table, sizeof(ScoreTable), &read);
-    PrintByte(3, 2, res, false);
-    
-    // uint32_t sector_start = sdCardFindFileFirstSector(PSTR("_HISCORE.DAT"));
-
-    // if (sector_start == 0) {
-    // 	Print(0, 0, PSTR("ERR: _HISCORE.DAT not found"));
-    // 	while (true);
-    // }
-
-    // sdCardCueSectorAddress(sector_start + SD_BLOCK_ID);
-    // sdCardDirectReadSimple((uint8_t*)_table, sizeof(ScoreTable));
-}
-
-void save_scores() {
-
-}
-
-#endif

@@ -71,7 +71,6 @@ int main() {
     	WaitVsync(1);
     	button_update();
 
-#if 1
     	switch (_state) {
     	case STATE_PLAYING: {
 	    if (state_first_updatep()) {
@@ -117,8 +116,6 @@ int main() {
 		
 		player_destroy();
 		Print(SCREEN_TILES_H/2-5, SCREEN_TILES_V/2-3, PSTR("GAME OVER"));
-		// Print(SCREEN_TILES_H/2-6, SCREEN_TILES_V/2,   PSTR("PRESS START"));
-
 		Print(SCREEN_TILES_H/2-10, SCREEN_TILES_V/2+2, PSTR("PRESS A TO CONTINUE"));
 		Print(SCREEN_TILES_H/2-10, SCREEN_TILES_V/2+4, PSTR("PRESS START FOR MENU"));
 	    }
@@ -198,19 +195,17 @@ int main() {
 	    if (_btn.prsd & BTN_LEFT)  letter = (7+letter-1)%7;
 	    if (_btn.prsd & BTN_RIGHT) letter = (7+letter+1)%7;
 
-	    // FontFill(L, U-1, 8, 1, ' ');
 	    FontFill(L, U+1, 8, 1, ' ');
 	    PrintRam(L, U, name);
-	    // PrintChar(L+letter, U-1, '^');
 	    PrintChar(L+letter, U+1, '^');
 
-	    if (_btn.prsd & BTN_START) {
+	    if (_btn.prsd & BTN_START) { // || _btn.prsd & BTN_A) {
 		score_add(name, player_get_score());
 		save_scores();
+		player_destroy();
 		switch_state(STATE_SCORES);
 	    }
 	} break;
     	}
-#endif
     }
 }
