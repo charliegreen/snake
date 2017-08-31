@@ -7,7 +7,7 @@
 #include "data/font-8x8-full.inc"
 
 typedef enum {
-    STATE_PLAYING, STATE_DIED
+    STATE_PLAYING, STATE_DIED, STATE_MENU, STATE_SCORES, STATE_ENTER_NAME
 } GameState;
 GameState _state = STATE_PLAYING;
 
@@ -46,13 +46,6 @@ bool out_of_bounds(u8 x, u8 y) {
     return false;
 }
 
-void die() {
-    player_destroy();
-    _state = STATE_DIED;
-    Print(SCREEN_TILES_H/2-5, SCREEN_TILES_V/2-3, PSTR("GAME OVER"));
-    Print(SCREEN_TILES_H/2-6, SCREEN_TILES_V/2,   PSTR("PRESS START"));
-}
-
 int main() {
     GetPrngNumber(GetTrueRandomSeed());
     SetFontTable(font);
@@ -62,15 +55,24 @@ int main() {
     player_init();
     apple_create();
 
-    load_scores();
+    static bool _state_first_update = true;
+    inline void switch_state(u8 state) {
+	_state = state;
+	_state_first_update = true;
+    }
+    inline bool state_first_updatep() {
+	if (_state_first_update) {
+	    _state_first_update = false;
+	    return true;
+	}
+	return false;
+    }
     
     while (true) {
     	WaitVsync(1);
     	button_update();
 
-	draw_scores();
-	
-#if 0
+#if 1
     	switch (_state) {
     	case STATE_PLAYING: {
 	    if      (_btn.prsd & BTN_UP)    player_turn(BTN_UP);
@@ -79,7 +81,7 @@ int main() {
 	    else if (_btn.prsd & BTN_RIGHT) player_turn(BTN_RIGHT);
 	    
     	    if (player_update()) {
-    		die();
+    		switch_state(STATE_DIED);
 		break;
     	    }
 	    
@@ -93,11 +95,31 @@ int main() {
     	} break;
 
     	case STATE_DIED: {
+	    if (state_first_updatep()) {
+		player_destroy();
+		Print(SCREEN_TILES_H/2-5, SCREEN_TILES_V/2-3, PSTR("GAME OVER"));
+		Print(SCREEN_TILES_H/2-6, SCREEN_TILES_V/2,   PSTR("PRESS START"));
+	    }
 	    if (_btn.prsd & BTN_START) {
 		player_init();
 		_state = STATE_PLAYING;
 	    }
     	} break;
+
+	case STATE_MENU: {
+	    // TODO: main menu
+	} break;
+
+	case STATE_SCORES: {
+	    if (state_first_updatep()) {
+		load_scores();
+		draw_scores();
+	    }
+	} break;
+
+	case STATE_ENTER_NAME: {
+	    // TODO
+	} break;
     	}
 #endif
     }
