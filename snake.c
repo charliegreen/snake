@@ -187,15 +187,20 @@ int main() {
 	    static unsigned char name[8] = "AAAAAAA\0";
 	    static u8 letter = 0;
 
+	    if (name[letter] == ' ')
+	    	name[letter] = 'Z'+1;
+
 	    if (_btn.prsd & BTN_UP)    name[letter]--;
 	    if (_btn.prsd & BTN_DOWN)  name[letter]++;
 	    if (_btn.prsd & BTN_SL)    name[letter]-=5;
 	    if (_btn.prsd & BTN_SR)    name[letter]+=5;
-	    if (name[letter] < ' ')
-		name[letter] += '~'-' ';
-	    if (name[letter] > '~')
-		name[letter] -= '~'-' '+1; //+= ' '-'~';
-
+	    
+	    if (name[letter] < 'A')
+		name[letter] += 27;
+	    name[letter] = (name[letter]-'A') % 27 + 'A';
+	    if (name[letter] == 'Z'+1)
+	    	name[letter] = ' ';
+	    
 	    if (_btn.prsd & BTN_LEFT)  letter = (7+letter-1)%7;
 	    if (_btn.prsd & BTN_RIGHT) letter = (7+letter+1)%7;
 

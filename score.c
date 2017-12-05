@@ -37,13 +37,13 @@ static void mcopy(u8*dst, u8*src, uint16_t len) {
 // }
 
 static void score_initialize() {
-    mcopy((u8*)&_table->entries[0].name, (u8*)"bytsqid\0", 8);
+    mcopy((u8*)&_table->entries[0].name, (u8*)"BYTSQID\0", 8);
     _table->entries[0].score = 50;
     
-    mcopy((u8*)&_table->entries[1].name, (u8*)"bytsqid\0", 8);
+    mcopy((u8*)&_table->entries[1].name, (u8*)"BYTSQID\0", 8);
     _table->entries[1].score = 10;
     
-    mcopy((u8*)&_table->entries[2].name, (u8*)"bytsqid\0", 8);
+    mcopy((u8*)&_table->entries[2].name, (u8*)"BYTSQID\0", 8);
     _table->entries[2].score = 1;
 
     save_scores();
